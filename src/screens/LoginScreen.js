@@ -3,18 +3,12 @@ import React from "react";
 import { useAuth } from "../hooks/useAuth";
 
 const LoginScreen = () => {
-  const auth = useAuth();
+  const { request, logIn, loading } = useAuth();
 
   return (
     <View>
-      <Text>LoginScreen</Text>
-      <Button
-        disabled={!auth.request}
-        title="Login"
-        onPress={() => {
-          auth.promptAsync();
-        }}
-      />
+      <Text>{loading ? "loading..." : "Login to the app"}</Text>
+      <Button disabled={!request} title="Login" onPress={() => logIn()} />
     </View>
   );
 };
