@@ -7,16 +7,49 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import React, { useLayoutEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
 import Swiper from "react-native-deck-swiper";
 import { DUMMY_DATA } from "../../dummyData";
+import Card from "../components/Card";
+import NoMoreCardsCard from "../components/NoMoreCardsCard";
+import { collection, doc, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { user, logOut } = useAuth();
+  const [profiles, setProfiles] = useState([]);
   const swipeRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const unsub = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+      if (!snapshot.exists()) {
+        navigation.navigate("Modal");
+      }
+    });
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    let unsub;
+
+    const fetchCards = async () => {
+      unsub = onSnapshot(collection(db, "users"), (snapshot) => {
+        setProfiles(
+          snapshot.docs
+            .filter((doc) => doc.id !== user.uid)
+            .map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+        );
+      });
+    };
+    fetchCards();
+    return unsub;
+  }, []);
 
   return (
     <SafeAreaView className="flex-1">
@@ -45,6 +78,7 @@ const HomeScreen = () => {
       <View className="flex-1">
         <Swiper
           ref={swipeRef}
+          cards={profiles}
           containerStyle={{ backgroundColor: "transparent" }}
           stackSize={5}
           cardIndex={0}
@@ -76,26 +110,9 @@ const HomeScreen = () => {
               },
             },
           }}
-          cards={DUMMY_DATA}
-          renderCard={(card) => (
-            <View
-              key={card.id}
-              className="relative bg-white h-3/5 border-gray-200 border-2 rounded-2xl overflow-hidden">
-              <Image
-                className="h-full w-full object-cover"
-                source={{ uri: card.photoURL }}
-              />
-              <View className="absolute flex-row items-center justify-between bottom-0 z-10 p-4 bg-white w-full">
-                <View className="flex-col">
-                  <Text className="font-bold text-lg">
-                    {card.first_name} {card.last_name}
-                  </Text>
-                  <Text className="font-semibold">{card.occupation}</Text>
-                </View>
-                <Text className="font-semibold text-2xl">{card.age}</Text>
-              </View>
-            </View>
-          )}
+          renderCard={(card) =>
+            card ? <Card key={card.id} card={card} /> : <NoMoreCardsCard />
+          }
         />
       </View>
 

@@ -1,8 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 
-export const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyDFCMS1ctS0Zl2zux2oQgZchhAXwcOkPFk",
   authDomain: "food-delivery-f2e40.firebaseapp.com",
   projectId: "food-delivery-f2e40",
@@ -13,6 +13,10 @@ export const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
-const db = getFirestore();
+const db = initializeFirestore(app, {
+  // https://github.com/firebase/firebase-js-sdk/issues/1674
+  // I had to use this to get firestore to connect
+  experimentalAutoDetectLongPolling: true,
+});
 
 export { auth, db };

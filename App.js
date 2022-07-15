@@ -1,5 +1,4 @@
 import { NavigationContainer } from "@react-navigation/native";
-import { StatusBar } from "expo-status-bar";
 import { TailwindProvider } from "tailwindcss-react-native";
 import { AuthProvider } from "./src/hooks/useAuth";
 import StackNavigator from "./StackNavigator";
