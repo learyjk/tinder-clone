@@ -17,9 +17,12 @@ import NoMoreCardsCard from "../components/NoMoreCardsCard";
 import {
   collection,
   doc,
+  DocumentSnapshot,
+  getDoc,
   getDocs,
   onSnapshot,
   query,
+  serverTimestamp,
   setDoc,
   where,
 } from "firebase/firestore";
@@ -88,8 +91,44 @@ const HomeScreen = () => {
     if (!profiles[cardIndex]) return;
 
     const userSwiped = profiles[cardIndex];
-    console.log(`You swiped MATCH on ${userSwiped.displayName}`);
-    setDoc(doc(db, "users", user.uid, "swipes", userSwiped.id), userSwiped);
+    console.log("Here");
+    const first = await getDoc(doc(db, "users", user.uid));
+    const loggedInProfile = await first.data();
+
+    // Check if user swiped on you
+    getDoc(doc(db, "users", userSwiped.id, "swipes", user.uid)).then(
+      (documentSnapshot) => {
+        if (documentSnapshot.exists()) {
+          // user has matched with you before you matched with them....
+          console.log(`Hooray, you matched with ${userSwiped.displayName}`);
+          setDoc(
+            doc(db, "users", user.uid, "swipes", userSwiped.id),
+            userSwiped
+          );
+
+          // CREATE MATCH
+          setDoc(doc(db, "matches", generateId(user.uid, userSwiped.id)), {
+            users: {
+              [user.uid]: loggedInProfile,
+              [userSwiped.id]: userSwiped,
+            },
+            userMatched: [user.uid, userSwiped.id],
+            timestamp: serverTimestamp(),
+          });
+          navigation.navigate("Match", {
+            loggedInProfile,
+            userSwiped,
+          });
+        } else {
+          // User has swiped as first interaction between the two or didn't get swiped on
+          console.log(`You swiped MATCH on ${userSwiped.displayName}`);
+          setDoc(
+            doc(db, "users", user.uid, "swipes", userSwiped.id),
+            userSwiped
+          );
+        }
+      }
+    );
   };
 
   return (
