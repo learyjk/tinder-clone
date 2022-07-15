@@ -14,7 +14,15 @@ import Swiper from "react-native-deck-swiper";
 import { DUMMY_DATA } from "../../dummyData";
 import Card from "../components/Card";
 import NoMoreCardsCard from "../components/NoMoreCardsCard";
-import { collection, doc, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import { db } from "../../firebase";
 
 const HomeScreen = () => {
@@ -36,20 +44,43 @@ const HomeScreen = () => {
     let unsub;
 
     const fetchCards = async () => {
-      unsub = onSnapshot(collection(db, "users"), (snapshot) => {
-        setProfiles(
-          snapshot.docs
-            .filter((doc) => doc.id !== user.uid)
-            .map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }))
-        );
-      });
+      const passes = await getDocs(
+        collection(db, "users", user.uid, "passes")
+      ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
+      //console.log("passes", passes);
+
+      const passedUserIds = passes.length > 0 ? passes : ["empty_value"];
+
+      unsub = onSnapshot(
+        query(
+          collection(db, "users"),
+          where("id", "not-in", [...passedUserIds])
+        ),
+        (snapshot) => {
+          setProfiles(
+            snapshot.docs
+              .filter((doc) => doc.id !== user.uid)
+              .map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              }))
+          );
+        }
+      );
     };
     fetchCards();
     return unsub;
   }, []);
+
+  const swipeLeft = (cardIndex) => {
+    if (!profiles[cardIndex]) return;
+
+    const userSwiped = profiles[cardIndex];
+    console.log(`You swiped PASS on ${userSwiped.displayName}`);
+    setDoc(doc(db, "users", user.uid, "passes", userSwiped.id), userSwiped);
+  };
+
+  const swipeRight = async (cardIndex) => {};
 
   return (
     <SafeAreaView className="flex-1">
@@ -83,11 +114,13 @@ const HomeScreen = () => {
           stackSize={5}
           cardIndex={0}
           animateCardOpacity
-          onSwipedLeft={() => {
+          onSwipedLeft={(cardIndex) => {
             console.log("Swipe PASS");
+            swipeLeft(cardIndex);
           }}
-          onSwipedRight={() => {
+          onSwipedRight={(cardIndex) => {
             console.log("Swipe MATCH");
+            swipeRight(cardIndex);
           }}
           verticalSwipe={false}
           overlayLabels={{
