@@ -47,14 +47,18 @@ const HomeScreen = () => {
       const passes = await getDocs(
         collection(db, "users", user.uid, "passes")
       ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
-      //console.log("passes", passes);
+
+      const swipes = await getDocs(
+        collection(db, "users", user.uid, "swipes")
+      ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
 
       const passedUserIds = passes.length > 0 ? passes : ["empty_value"];
+      const swipedUserIds = swipes.length > 0 ? swipes : ["empty_value"];
 
       unsub = onSnapshot(
         query(
           collection(db, "users"),
-          where("id", "not-in", [...passedUserIds])
+          where("id", "not-in", [...passedUserIds, ...swipedUserIds])
         ),
         (snapshot) => {
           setProfiles(
@@ -80,7 +84,13 @@ const HomeScreen = () => {
     setDoc(doc(db, "users", user.uid, "passes", userSwiped.id), userSwiped);
   };
 
-  const swipeRight = async (cardIndex) => {};
+  const swipeRight = async (cardIndex) => {
+    if (!profiles[cardIndex]) return;
+
+    const userSwiped = profiles[cardIndex];
+    console.log(`You swiped MATCH on ${userSwiped.displayName}`);
+    setDoc(doc(db, "users", user.uid, "swipes", userSwiped.id), userSwiped);
+  };
 
   return (
     <SafeAreaView className="flex-1">
