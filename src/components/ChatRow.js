@@ -14,7 +14,9 @@ const ChatRow = ({ matchDetails }) => {
   }, [matchDetails, user]);
 
   return (
-    <TouchableOpacity className="w-full flex-row items-center p-4 bg-white">
+    <TouchableOpacity
+      onPress={() => navigation.navigate("Message", { matchDetails })}
+      className="w-full flex-row items-center p-4 bg-white">
       <Image
         className="rounded-full h-16 w-16 mr-4"
         source={{ uri: matchedUserInfo?.photoURL }}
