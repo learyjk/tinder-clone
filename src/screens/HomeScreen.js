@@ -27,6 +27,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../../firebase";
+import generateId from "../../lib/generateId";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
