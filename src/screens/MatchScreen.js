@@ -11,7 +11,10 @@ const MatchScreen = () => {
   return (
     <View className="h-full bg-red-500 pt-20 opacity-90">
       <View className="justify-center px-10 pt-20">
-        <Image source={{ uri: "https://links.papareact.com/mg9" }} />
+        <Image
+          className="h-20 w-full"
+          source={{ uri: "https://links.papareact.com/mg9" }}
+        />
       </View>
       <Text className="text-white text-center mt-5">
         You and {userSwiped.displayName} have liked each other
